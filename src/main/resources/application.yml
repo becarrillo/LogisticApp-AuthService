@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: auth-service
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  cloud:
+    config:
+      import-check:
+        enabled: false
+
+jwt:
+  secret: ${SECRET_KEY}
