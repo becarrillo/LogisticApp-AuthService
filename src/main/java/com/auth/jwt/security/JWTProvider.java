@@ -1,5 +1,6 @@
 package com.auth.jwt.security;
 
+import com.auth.jwt.dto.RequestDto;
 import com.auth.jwt.entities.AuthUser;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -14,9 +15,14 @@ import java.util.*;
  */
 @Component
 public class JWTProvider {
+    private final AdminRouteValidator adminRouteValidator;
 
     @Value("${jwt.secret}")
     private String secret;
+
+    public JWTProvider(AdminRouteValidator adminRouteValidator) {
+        this.adminRouteValidator = adminRouteValidator;
+    }
 
     @PostConstruct
     protected void init() {
@@ -37,6 +43,7 @@ public class JWTProvider {
         Map<String, Object> claims = new HashMap<String, Object>();
         claims = Jwts.claims().subject(authUser.getUserName()).build();
         claims.put("id", authUser.getId());
+        claims.put("role", authUser.getRole());
         final Date now = new Date();
         Date exp = new Date(now.getTime() + 3600000 * 72);
         claims.put("exp", exp);
@@ -56,12 +63,18 @@ public class JWTProvider {
      * has been verified and matches the expected from successfull login
      */
     public boolean validate(String token) {
-        final Optional<Jws<Claims>> optJwsClaims = Optional
-                .of(
-                        Jwts.parser()
-                                .verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
-                                .build()
-                                .parseSignedClaims(token));
+        Optional<Jws<Claims>> optJwsClaims;
+        try {
+            optJwsClaims = Optional
+                    .of(
+                            Jwts.parser()
+                                    .verifyWith(Keys.hmacShaKeyFor(secret.getBytes()))
+                                    .build()
+                                    .parseSignedClaims(token));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         return optJwsClaims.isPresent();
     }
 
@@ -72,5 +85,13 @@ public class JWTProvider {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+
+    public boolean isAdmin(String token, RequestDto reqDto) {
+        return Jwts.parser().verifyWith(Keys.hmacShaKeyFor(secret.getBytes())).build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role")
+                .equals("ADMIN") && adminRouteValidator.isAdmin(reqDto);
     }
 }

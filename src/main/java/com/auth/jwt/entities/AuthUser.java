@@ -22,5 +22,11 @@ public class AuthUser {
     private short id;
     private String userName;
     private String password;
+    private Role role;
+}
 
+enum Role {
+    ADMIN,
+    AUXILIAR,
+    USER,
 }

@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: auth-service
+    name: AUTH-SERVICE
   jpa:
     hibernate:
       ddl-auto: update
@@ -18,3 +18,12 @@ spring:
 
 jwt:
   secret: ${SECRET_KEY}
+
+admin-paths:
+  paths:
+    -
+      uri: "/usuarios/nuevo"
+      method: "POST"
+    -
+      uri: "/usuarios/auxiliares"
+      method: "GET"
